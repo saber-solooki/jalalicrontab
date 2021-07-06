@@ -1,6 +1,5 @@
 from bisect import bisect, bisect_left
 
-import jdatetime
 from celery.schedules import crontab
 from celery.utils.collections import AttributeDict
 from celery.utils.time import ffwd
@@ -9,15 +8,17 @@ from jalalicrontab.utils.time import jalalidatetime
 
 
 class JalaliCrontab(crontab):
+    datetime_cls = jalalidatetime
+
     def now(self):
-        return jalalidatetime.now()
+        return self.datetime_cls.now()
 
     def _delta_to_next(self, last_run_at, next_hour, next_minute):
         """Find next delta. Actually this function is just like the parent class,
         otherwise :class:`~datetime.datetime` is replaced with
         :class:`~jdatetime.datetime`
 
-        Takes a :class:`~jdatetime.datetime` of last run, next minute and hour,
+        Takes a :class:`~datetime.datetime` of last run, next minute and hour,
         and returns a :class:`~celery.utils.time.ffwd` for the next
         scheduled day and time.
 
@@ -30,14 +31,14 @@ class JalaliCrontab(crontab):
 
         def day_out_of_range(year, month, day):
             try:
-                jdatetime.datetime(year=year, month=month, day=day)
+                self.datetime_cls(year=year, month=month, day=day)
             except ValueError:
                 return True
             return False
 
         def is_before_last_run(year, month, day):
             return self.maybe_make_aware(
-                jdatetime.datetime(year, month, day)) < last_run_at
+                self.datetime_cls(year, month, day)) < last_run_at
 
         def roll_over():
             for _ in range(2000):
@@ -73,9 +74,9 @@ class JalaliCrontab(crontab):
         roll_over()
 
         while 1:
-            th = jdatetime.datetime(year=datedata.year,
-                                    month=months_of_year[datedata.moy],
-                                    day=days_of_month[datedata.dom])
+            th = self.datetime_cls(year=datedata.year,
+                                   month=months_of_year[datedata.moy],
+                                   day=days_of_month[datedata.dom])
             if th.isoweekday() % 7 in self.day_of_week:
                 break
             datedata.dom += 1
@@ -90,8 +91,8 @@ class JalaliCrontab(crontab):
                     microsecond=0)
 
     def remaining_estimate(self, last_run_at, ffwd=ffwd):
-        if not isinstance(last_run_at, jalalidatetime):
-            last_run_at = jalalidatetime.fromgregorian(datetime=last_run_at)
+        if type(last_run_at) != self.datetime_cls:
+            last_run_at = self.datetime_cls.fromgregorian(datetime=last_run_at)
         return super().remaining_estimate(last_run_at, ffwd)
 
     def __reduce__(self):

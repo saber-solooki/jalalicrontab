@@ -3,20 +3,36 @@ from functools import wraps
 import datetime
 import jdatetime
 
+import inspect
+
 
 _tzinfo_class = datetime.tzinfo
 
 
 def jalali_convertor(func):
+    def get_actual_class(arg):
+        clazz = None
+        if isinstance(arg, jalalidatetime):
+            clazz = type(arg)
+        if inspect.isclass(arg):
+            clazz = arg
+
+        if clazz is None:
+            raise TypeError("Your class is not compatible with jalali datetime")
+
+        return clazz
+
     @wraps(func)
     def wrapper(*args, **kwargs):
+        clazz = get_actual_class(args[0])
+
         func_result = func(*args, **kwargs)
 
         if type(func_result) == jdatetime.datetime:
-            return jalalidatetime(func_result.year, func_result.month, func_result.day,
-                                  func_result.hour, func_result.minute,
-                                  func_result.second, func_result.microsecond,
-                                  func_result.tzinfo, locale=func_result.locale)
+            return clazz(func_result.year, func_result.month, func_result.day,
+                         func_result.hour, func_result.minute,
+                         func_result.second, func_result.microsecond,
+                         func_result.tzinfo, locale=func_result.locale)
         else:
             return func_result
 
@@ -44,9 +60,9 @@ class jalalidatetime(jdatetime.datetime):
     def __class__(self):
         return datetime.datetime
 
-    @staticmethod
+    @classmethod
     @jalali_convertor
-    def fromgregorian(**kw):
+    def fromgregorian(cls, **kw):
         return jdatetime.datetime.fromgregorian(**kw)
 
     @jalali_convertor
@@ -59,49 +75,49 @@ class jalalidatetime(jdatetime.datetime):
     def astimezone(self, tz):
         return super(jalalidatetime, self).astimezone(tz)
 
-    @staticmethod
+    @classmethod
     @jalali_convertor
-    def today():
+    def today(cls):
         return jdatetime.datetime.now()
 
-    @staticmethod
+    @classmethod
     @jalali_convertor
-    def now(tz=None):
+    def now(cls, tz=None):
         return jdatetime.datetime.now()
 
-    @staticmethod
+    @classmethod
     @jalali_convertor
-    def utcnow():
+    def utcnow(cls):
         return jdatetime.datetime.utcnow()
 
-    @staticmethod
+    @classmethod
     @jalali_convertor
-    def fromtimestamp(timestamp, tz=None):
+    def fromtimestamp(cls, timestamp, tz=None):
         return jdatetime.datetime.fromtimestamp(timestamp, tz)
 
-    @staticmethod
+    @classmethod
     @jalali_convertor
-    def utcfromtimestamp(timestamp):
+    def utcfromtimestamp(cls, timestamp):
         return jdatetime.datetime.utcfromtimestamp(timestamp)
 
-    @staticmethod
+    @classmethod
     @jalali_convertor
-    def combine(d=None, t=None, **kw):
+    def combine(cls, d=None, t=None, **kw):
         return jdatetime.datetime.combine(d, t, **kw)
 
-    @staticmethod
+    @classmethod
     @jalali_convertor
-    def fromordinal(ordinal):
+    def fromordinal(cls, ordinal):
         return jdatetime.datetime.fromordinal(ordinal)
 
-    @staticmethod
+    @classmethod
     @jalali_convertor
-    def strptime(date_string, format):
+    def strptime(cls, date_string, format):
         return jdatetime.datetime.strptime(date_string, format)
 
     def __add__(self, timedelta):
         if isinstance(timedelta, datetime.timedelta):
-            return jalalidatetime.fromgregorian(
+            return self.fromgregorian(
                 datetime=self.togregorian() + timedelta, locale=self.locale)
         return NotImplemented
 
@@ -111,11 +127,11 @@ class jalalidatetime(jdatetime.datetime):
         """x.__sub__(y) <==> x-y"""
 
         if isinstance(other, datetime.timedelta):
-            return jalalidatetime.fromgregorian(datetime=self.togregorian() - other,
-                                                locale=self.locale)
+            return self.fromgregorian(datetime=self.togregorian() - other,
+                                      locale=self.locale)
         if type(other) == datetime.datetime:
             return self.togregorian() - other
-        if type(other) == jdatetime.datetime or type(other) == jalalidatetime:
+        if isinstance(other, jdatetime.datetime):
             return self.togregorian() - other.togregorian()
         return NotImplemented
 

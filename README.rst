@@ -50,7 +50,6 @@ And also you can use it alongside RedisBeater by extending `JalaliCrontab` and
 
             datetime_obj = self.togregorian()
             return {
-                '__type__': 'datetime',
                 'year': datetime_obj.year,
                 'month': datetime_obj.month,
                 'day': datetime_obj.day,
