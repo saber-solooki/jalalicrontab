@@ -34,10 +34,14 @@ task will be run every minutes in "30" of "dey" month:
             test.s('Happy my birthday!'),
         )
 
-And also you can use it alongside RedisBeater by extending `JalaliCrontab` and
+And also you can use it alongside `RedisBeater <https://github.com/saber-solooki/redisbeater>`_ by extending `JalaliCrontab` and
 `jalalidatetime` then define `encode_beater` method for them:
 
 .. code-block:: python
+
+    from jalalicrontab.time import jalalidatetime
+    from jalalicrontab.schedule import JalaliCrontab
+
 
     class Myjalalidatetime(jalalidatetime):
         def encode_beater(self):
