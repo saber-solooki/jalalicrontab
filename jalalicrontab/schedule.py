@@ -4,7 +4,7 @@ from celery.schedules import crontab
 from celery.utils.collections import AttributeDict
 from celery.utils.time import ffwd
 
-from jalalicrontab.utils.time import jalalidatetime
+from jalalicrontab.time import jalalidatetime
 
 
 class JalaliCrontab(crontab):
