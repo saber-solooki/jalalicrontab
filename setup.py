@@ -6,7 +6,7 @@ setup(
     name="celery-jalalicrontab",
     description="A Celery schedule corntab which is work with jalali calendar",
     long_description=long_description,
-    version="1.0.1",
+    version="1.0.2",
     url="https://github.com/saber-solooki/jalalicrontab",
     license="Apache License, Version 2.0",
     author="Saber Solooki",
